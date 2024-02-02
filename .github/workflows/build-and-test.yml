@@ -1,0 +1,20 @@
+name: build-and-test
+
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Run Buildpack Compile
+      run: ./bin/compile . . .
+      env:
+        STACK: heroku-22
+
+    - name: Check Installation
+      run: |
+        .chrome-for-testing/bin/chrome --version
+        .chrome-for-testing/bin/chromedriver --version

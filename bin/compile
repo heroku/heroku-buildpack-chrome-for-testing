@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+# bin/compile <build-dir> <cache-dir> <env-dir>
+
+# fail fast
+set -e
+set -o pipefail
+
+# debug
+# set -x
+
+# parse and derive params
+BUILD_DIR=$1
+CACHE_DIR=$2
+ENV_DIR=$3
+BUILDPACK_DIR="$(cd "$(dirname "$0")"; cd ..; pwd)"
+
+function error() {
+  echo " !     $*" >&2
+  exit 1
+}
+
+function topic() {
+  echo "-----> $*"
+}
+
+function indent() {
+  c='s/^/       /'
+  case $(uname) in
+    Darwin) sed -l "$c";;
+    *)      sed -u "$c";;
+  esac
+}
+
+topic "Installing Chrome for Testing"
+
+INSTALL_DIR="$BUILD_DIR/.chrome-for-testing"
+BIN_DIR="$INSTALL_DIR/bin"
+mkdir -p "$BIN_DIR"
+
+# Detect if the old config var is still used
+if [ -f "$ENV_DIR/CHROMEDRIVER_VERSION" ]; then
+  error "This buildpack no longer supports CHROMEDRIVER_VERSION config var and must be removed to continue, because this buildpack now installs compatible versions of Chrome & Chromedriver. GOOGLE_CHROME_CHANNEL can be used to set Stable (default), Beta, Dev, or Canary."
+fi
+
+# Detect if Chrome is already installed
+if which chrome; then
+  error "Chrome is already installed. This buildpack now installs a compatible version of Chrome. Please, remove the other Chrome installation. Chrome may have been installed by another buildpack (such as heroku/heroku-buildpack-google-chrome buildpack), which should no longer be used with this buildpack."
+fi
+
+# Detect requested channel or default to stable
+if [ -f "$ENV_DIR/GOOGLE_CHROME_CHANNEL" ]; then
+  channel=$(cat "$ENV_DIR/GOOGLE_CHROME_CHANNEL")
+  echo "Using env var GOOGLE_CHROME_CHANNEL=$channel" | indent
+else
+  channel=stable
+fi
+# The current version endpoint requires ALL CAPS.
+CHANNEL="$(echo -n "$channel" | awk '{ print toupper($0) }')"
+VERSION="$(curl --silent --show-error --fail --retry 3 --retry-connrefused --connect-timeout 10 "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_$CHANNEL")"
+echo "Resolved $CHANNEL version $VERSION" | indent
+
+echo "Downloading Chrome" | indent
+ZIP_URL="https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/$VERSION/linux64/chrome-linux64.zip"
+ZIP_LOCATION="$INSTALL_DIR/chrome.zip"
+curl --silent --show-error --fail --retry 3 --retry-connrefused --connect-timeout 10 -o "${ZIP_LOCATION}" "${ZIP_URL}" | indent
+unzip -q -j -o "$ZIP_LOCATION" -d "$BIN_DIR" | indent
+rm -f "$ZIP_LOCATION"
+
+echo "Downloading Chromedriver" | indent
+ZIP_URL="https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/$VERSION/linux64/chromedriver-linux64.zip"
+ZIP_LOCATION="$INSTALL_DIR/chromedriver.zip"
+curl --silent --show-error --fail --retry 3 --retry-connrefused --connect-timeout 10 -o "${ZIP_LOCATION}" "${ZIP_URL}" | indent
+unzip -q -j -o "$ZIP_LOCATION" -d "$BIN_DIR" | indent
+rm -f "$ZIP_LOCATION"
+
+source "$BUILDPACK_DIR/bin/install-chrome-dependencies"
+
+echo "Adding executables to PATH" | indent
+mkdir -p "$BUILD_DIR/.profile.d"
+echo "export PATH=\$HOME/.chrome-for-testing/bin:\$PATH" >> "$BUILD_DIR/.profile.d/chrome-for-testing.sh"
+
+# Verify the executables are actually present
+export PATH="$BUILD_DIR/.chrome-for-testing/bin:$PATH"
+which chrome | indent
+which chromedriver | indent
+
+echo "Installed Chrome for Testing $CHANNEL version $VERSION" | indent
