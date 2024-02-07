@@ -18,4 +18,4 @@ config variable to `Stable`, `Beta`, `Dev`, or `Canary`, and then deploy/build t
 
 Make sure you publish this buildpack in the buildpack registry
 
-`heroku buildpacks:publish heroku/chrome-for-testing main`
+`heroku buildpacks:publish heroku-community/chrome-for-testing main`
