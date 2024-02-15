@@ -8,13 +8,14 @@ In summer 2023, the Chrome development team [addressed a long-standing problem w
 
 ## Installation
 
-⚠️ If migrating from a previous Chrome-chromedriver installation, then remove any pre-existing Chrome or Chromedriver buildpacks from the app.
+> [!IMPORTANT]
+> If migrating from a previous Chrome-chromedriver installation, then remove any pre-existing Chrome or Chromedriver buildpacks from the app.
 
 ```bash
 heroku buildpacks:add -i 1 heroku-community/chrome-for-testing
 ```
 
-🚀 Deploy the app to install Chrome for Testing.
+Deploy the app to install Chrome for Testing. 🚀 
 
 ## Selecting the Chrome Release Channel
 
