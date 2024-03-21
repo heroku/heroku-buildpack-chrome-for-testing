@@ -77,10 +77,10 @@ source "$BUILDPACK_DIR/bin/install-chrome-dependencies"
 
 echo "Adding executables to PATH" | indent
 mkdir -p "$BUILD_DIR/.profile.d"
-echo "export PATH=\$HOME/.chrome-for-testing/bin:\$PATH" >> "$BUILD_DIR/.profile.d/chrome-for-testing.sh"
+echo "export PATH=\$HOME/.chrome-for-testing/bin/chrome-linux64:\$HOME/.chrome-for-testing/bin/chromedriver-linux64:\$PATH" >> "$BUILD_DIR/.profile.d/chrome-for-testing.sh"
 
 # Verify the executables are actually present
-export PATH="$BUILD_DIR/.chrome-for-testing/bin:$PATH"
+export PATH="$BUILD_DIR/.chrome-for-testing/bin/chrome-linux64:$BUILD_DIR/.chrome-for-testing/bin/chromedriver-linux64:$PATH"
 which chrome | indent
 which chromedriver | indent
 
