@@ -63,14 +63,14 @@ echo "Downloading Chrome" | indent
 ZIP_URL="https://storage.googleapis.com/chrome-for-testing-public/$VERSION/linux64/chrome-linux64.zip"
 ZIP_LOCATION="$INSTALL_DIR/chrome.zip"
 curl --silent --show-error --fail --retry 3 --retry-connrefused --connect-timeout 10 -o "${ZIP_LOCATION}" "${ZIP_URL}" | indent
-unzip -q -j -o "$ZIP_LOCATION" -d "$BIN_DIR" | indent
+unzip -q -o "$ZIP_LOCATION" -d "$BIN_DIR" | indent
 rm -f "$ZIP_LOCATION"
 
 echo "Downloading Chromedriver" | indent
 ZIP_URL="https://storage.googleapis.com/chrome-for-testing-public/$VERSION/linux64/chromedriver-linux64.zip"
 ZIP_LOCATION="$INSTALL_DIR/chromedriver.zip"
 curl --silent --show-error --fail --retry 3 --retry-connrefused --connect-timeout 10 -o "${ZIP_LOCATION}" "${ZIP_URL}" | indent
-unzip -q -j -o "$ZIP_LOCATION" -d "$BIN_DIR" | indent
+unzip -q -o "$ZIP_LOCATION" -d "$BIN_DIR" | indent
 rm -f "$ZIP_LOCATION"
 
 source "$BUILDPACK_DIR/bin/install-chrome-dependencies"
