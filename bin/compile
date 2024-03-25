@@ -34,8 +34,7 @@ function indent() {
 topic "Installing Chrome for Testing"
 
 INSTALL_DIR="$BUILD_DIR/.chrome-for-testing"
-BIN_DIR="$INSTALL_DIR/bin"
-mkdir -p "$BIN_DIR"
+mkdir -p "$INSTALL_DIR"
 
 # Detect if the old config var is still used
 if [ -f "$ENV_DIR/CHROMEDRIVER_VERSION" ]; then
@@ -63,24 +62,24 @@ echo "Downloading Chrome" | indent
 ZIP_URL="https://storage.googleapis.com/chrome-for-testing-public/$VERSION/linux64/chrome-linux64.zip"
 ZIP_LOCATION="$INSTALL_DIR/chrome.zip"
 curl --silent --show-error --fail --retry 3 --retry-connrefused --connect-timeout 10 -o "${ZIP_LOCATION}" "${ZIP_URL}" | indent
-unzip -q -o "$ZIP_LOCATION" -d "$BIN_DIR" | indent
+unzip -q -o "$ZIP_LOCATION" -d "$INSTALL_DIR" | indent
 rm -f "$ZIP_LOCATION"
 
 echo "Downloading Chromedriver" | indent
 ZIP_URL="https://storage.googleapis.com/chrome-for-testing-public/$VERSION/linux64/chromedriver-linux64.zip"
 ZIP_LOCATION="$INSTALL_DIR/chromedriver.zip"
 curl --silent --show-error --fail --retry 3 --retry-connrefused --connect-timeout 10 -o "${ZIP_LOCATION}" "${ZIP_URL}" | indent
-unzip -q -o "$ZIP_LOCATION" -d "$BIN_DIR" | indent
+unzip -q -o "$ZIP_LOCATION" -d "$INSTALL_DIR" | indent
 rm -f "$ZIP_LOCATION"
 
 source "$BUILDPACK_DIR/bin/install-chrome-dependencies"
 
 echo "Adding executables to PATH" | indent
 mkdir -p "$BUILD_DIR/.profile.d"
-echo "export PATH=\$HOME/.chrome-for-testing/bin/chrome-linux64:\$HOME/.chrome-for-testing/bin/chromedriver-linux64:\$PATH" >> "$BUILD_DIR/.profile.d/chrome-for-testing.sh"
+echo "export PATH=\$HOME/.chrome-for-testing/chrome-linux64:\$HOME/.chrome-for-testing/chromedriver-linux64:\$PATH" >> "$BUILD_DIR/.profile.d/chrome-for-testing.sh"
 
 # Verify the executables are actually present
-export PATH="$BUILD_DIR/.chrome-for-testing/bin/chrome-linux64:$BUILD_DIR/.chrome-for-testing/bin/chromedriver-linux64:$PATH"
+export PATH="$BUILD_DIR/.chrome-for-testing/chrome-linux64:$BUILD_DIR/.chrome-for-testing/chromedriver-linux64:$PATH"
 which chrome | indent
 which chromedriver | indent
 
