@@ -17,6 +17,11 @@ heroku buildpacks:add -i 1 heroku-community/chrome-for-testing
 
 Deploy the app to install Chrome for Testing. 🚀 
 
+## Install Paths
+The buildpack will add two files in the `/app/.chrome-for-testing` folder
+- `chromedriver-linux64`
+- `chrome-linux64`
+
 ## Selecting the Chrome Release Channel
 
 By default, this buildpack will download the latest `Stable` release, which is provided
