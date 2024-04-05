@@ -17,6 +17,22 @@ heroku buildpacks:add -i 1 heroku-community/chrome-for-testing
 
 Deploy the app to install Chrome for Testing. 🚀 
 
+### Path to Installed Executables
+
+After being installed by this buildpack, `chrome` & `chromedriver` are set in the `PATH` of dynos.
+
+If the absolute paths are required, you can discover their location in an app:
+
+```bash
+>>> heroku run bash
+$ which chrome
+/app/.chrome-for-testing/chrome-linux64/chrome
+$ which chromedriver
+/app/.chrome-for-testing/chromedriver-linux64/chromedriver
+```
+
+These locations may change in future versions of this buildpack, so please allow the operating system to resolve their locations from `PATH`, if possible.
+
 ## Selecting the Chrome Release Channel
 
 By default, this buildpack will download the latest `Stable` release, which is provided
