@@ -9,7 +9,7 @@ In summer 2023, the Chrome development team [addressed a long-standing problem w
 ## Installation
 
 > [!IMPORTANT]
-> If migrating from a previous Chrome-chromedriver installation, then remove any pre-existing Chrome or Chromedriver buildpacks from the app. See [Migrating guide](#migrating-from-separate-buildpacks).
+> If migrating from a previous Chrome-chromedriver installation, then remove any pre-existing Chrome or Chromedriver buildpacks from the app. See the [migration guide](#migrating-from-separate-buildpacks).
 
 ```bash
 heroku buildpacks:add -i 1 heroku-community/chrome-for-testing
@@ -29,7 +29,7 @@ config variable to `Stable`, `Beta`, `Dev`, or `Canary`, and then deploy/build t
 
 ### Remove Existing Installations
 
-When an app already uses the separate Chrome & Chromedriver buildpacks, removed them from the app, before adding this one:
+When an app already uses the separate Chrome & Chromedriver buildpacks, remove them from the app, before adding this one:
 
 ```
 heroku buildpacks:remove heroku/google-chrome
@@ -60,7 +60,7 @@ The prior `heroku/google-chrome` buildpack wrapped the `chrome` command with def
 
 Depending on how an app is already setup for testing with Chrome, it may not require any changes.
 
-**If the app fails to start Chrome**, please ensure that the following argument flags are set:
+**If the app fails to start Chrome**, please ensure that the following argument flags are set wherever `chrome` is invoked:
 
 * `--headless`
 * `--no-sandbox`
