@@ -9,13 +9,34 @@ In summer 2023, the Chrome development team [addressed a long-standing problem w
 ## Installation
 
 > [!IMPORTANT]
-> If migrating from a previous Chrome-chromedriver installation, then remove any pre-existing Chrome or Chromedriver buildpacks from the app.
+> If migrating from a previous Chrome-chromedriver installation, then remove any pre-existing Chrome or Chromedriver buildpacks from the app. See [Migrating guide](#migrating-from-separate-buildpacks).
 
 ```bash
 heroku buildpacks:add -i 1 heroku-community/chrome-for-testing
 ```
 
 Deploy the app to install Chrome for Testing. 🚀 
+
+## Selecting the Chrome Release Channel
+
+By default, this buildpack will download the latest `Stable` release, which is provided
+by [Google](https://googlechromelabs.github.io/chrome-for-testing/).
+
+You can control the channel of the release by setting the `GOOGLE_CHROME_CHANNEL`
+config variable to `Stable`, `Beta`, `Dev`, or `Canary`, and then deploy/build the app.
+
+## Migrating from Separate Buildpacks
+
+### Remove Existing Installations
+
+When an app already uses the separate Chrome & Chromedriver buildpacks, removed them from the app, before adding this one:
+
+```
+heroku buildpacks:remove heroku/google-chrome
+heroku buildpacks:remove heroku/chromedriver
+
+heroku buildpacks:add -i 1 heroku-community/chrome-for-testing
+```
 
 ### Path to Installed Executables
 
@@ -33,13 +54,21 @@ $ which chromedriver
 
 These locations may change in future versions of this buildpack, so please allow the operating system to resolve their locations from `PATH`, if possible.
 
-## Selecting the Chrome Release Channel
+### Changes to Command Flags
 
-By default, this buildpack will download the latest `Stable` release, which is provided
-by [Google](https://googlechromelabs.github.io/chrome-for-testing/).
+The prior `heroku/google-chrome` buildpack wrapped the `chrome` command with default flags using a shim script. This is no longer implemented for `chrome` in this buildpack, to support evolving changes to the Chrome for Testing flags, such as the [--headless=new variation](https://developer.chrome.com/docs/chromium/new-headless).
 
-You can control the channel of the release by setting the `GOOGLE_CHROME_CHANNEL`
-config variable to `Stable`, `Beta`, `Dev`, or `Canary`, and then deploy/build the app.
+Depending on how an app is already setup for testing with Chrome, it may not require any changes.
+
+**If the app fails to start Chrome**, please ensure that the following argument flags are set:
+
+* `--headless`
+* `--no-sandbox`
+
+Some use-cases may require these flags too:
+
+* `--disable-gpu`
+* `--remote-debugging-port=9222`
 
 ## Releasing a new version
 
