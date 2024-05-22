@@ -26,11 +26,3 @@ jobs:
         source .profile.d/chrome-for-testing.sh
         chrome --version
         chromedriver --version
-  done:
-    runs-on: ubuntu-latest
-
-    needs: [test]
-
-    steps:
-      - run: echo done
-        working-directory: /
