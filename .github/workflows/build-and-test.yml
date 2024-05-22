@@ -4,6 +4,9 @@ on: push
 
 jobs:
   test:
+    strategy:
+      matrix:
+        stack: [heroku-20, heroku-22, heroku-24]
     runs-on: ubuntu-latest
 
     steps:
@@ -13,7 +16,7 @@ jobs:
       run: |
         ./bin/compile . . .
       env:
-        STACK: heroku-22
+        STACK: ${{ matrix.stack }}
 
     - name: Check Installation
       run: |
