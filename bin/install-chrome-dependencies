@@ -50,14 +50,11 @@ case "${STACK}" in
     # the package list is found by using ci:debug then running ldd $GOOGLE_CHROME_BIN | grep not
     # also look here for more packages/notes https://developers.google.com/web/tools/puppeteer/troubleshooting
     PACKAGES="
-      libappindicator1
-      libasound2
       libatk1.0-0
       libatk-bridge2.0-0
       libcairo-gobject2
       libdrm2
       libgbm1
-      libgconf-2-4
       libgtk-3-0
       libnspr4
       libnss3
