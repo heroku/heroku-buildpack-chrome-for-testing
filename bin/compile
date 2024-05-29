@@ -84,3 +84,4 @@ which chrome | indent
 which chromedriver | indent
 
 echo "Installed Chrome for Testing $CHANNEL version $VERSION" | indent
+echo $PATH
