@@ -6,23 +6,10 @@ jobs:
   test:
     strategy:
       matrix:
-        stack: [heroku-20, heroku-22, heroku-24]
+        stack_version: [20, 22, 24]
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
-
-    - name: Run Buildpack Compile
-      run: |
-        ./bin/compile . . .
-      env:
-        STACK: ${{ matrix.stack }}
-
     - name: Check Installation
-      run: |
-        # Trick the profile script into using working dir as HOME
-        HOME="$(pwd)"
-        # Verify profile script puts Chrome & Chromedriver on the PATH
-        source .profile.d/chrome-for-testing.sh
-        chrome --version
-        chromedriver --version
+      run: ./bin/test.sh ${{ matrix.stack_version }}
