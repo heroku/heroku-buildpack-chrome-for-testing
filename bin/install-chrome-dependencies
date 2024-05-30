@@ -14,10 +14,10 @@
 topic "Installing Chrome dependencies"
 
 # Install correct dependencies according to $STACK
+# The package list is validated by bin/test.sh - see its output to identify any missing libraries.
+# Also look here for more packages/notes https://developers.google.com/web/tools/puppeteer/troubleshooting
 case "${STACK}" in
-  "heroku-20" | "heroku-22" )
-    # the package list is found by using ci:debug then running ldd $GOOGLE_CHROME_BIN | grep not
-    # also look here for more packages/notes https://developers.google.com/web/tools/puppeteer/troubleshooting
+  "heroku-20" | "heroku-22")
     PACKAGES="
       gconf-service
       libappindicator1
@@ -47,30 +47,18 @@ case "${STACK}" in
     "
     ;;
   "heroku-24")
-    # the package list is found by using ci:debug then running ldd $GOOGLE_CHROME_BIN | grep not
-    # also look here for more packages/notes https://developers.google.com/web/tools/puppeteer/troubleshooting
     PACKAGES="
-      libatk1.0-0
+      fonts-liberation
+      libasound2t64
       libatk-bridge2.0-0
-      libcairo-gobject2
-      libdrm2
+      libatk1.0-0
+      libcups2
       libgbm1
-      libgtk-3-0
-      libnspr4
-      libnss3
-      libx11-xcb1
-      libxcb-dri3-0
       libxcomposite1
-      libxcursor1
       libxdamage1
       libxfixes3
-      libxi6
-      libxinerama1
+      libxkbcommon0
       libxrandr2
-      libxshmfence1
-      libxss1
-      libxtst6
-      fonts-liberation
     "
     ;;
   *)
