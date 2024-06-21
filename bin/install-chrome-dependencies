@@ -19,31 +19,17 @@ topic "Installing Chrome dependencies"
 case "${STACK}" in
   "heroku-20" | "heroku-22")
     PACKAGES="
-      gconf-service
-      libappindicator1
+      fonts-liberation
       libasound2
-      libatk1.0-0
       libatk-bridge2.0-0
-      libcairo-gobject2
-      libdrm2
+      libatk1.0-0
+      libcups2
       libgbm1
-      libgconf-2-4
-      libgtk-3-0
-      libnspr4
-      libnss3
-      libx11-xcb1
-      libxcb-dri3-0
       libxcomposite1
-      libxcursor1
       libxdamage1
       libxfixes3
-      libxi6
-      libxinerama1
+      libxkbcommon0
       libxrandr2
-      libxshmfence1
-      libxss1
-      libxtst6
-      fonts-liberation
     "
     ;;
   "heroku-24")
@@ -99,7 +85,7 @@ for PACKAGE in $PACKAGES; do
     curl -s -L -z $PACKAGE_FILE -o $PACKAGE_FILE $PACKAGE 2>&1 | indent
   else
     echo "Fetching .debs for $PACKAGE" | indent
-    apt-get $APT_OPTIONS -y --force-yes -d install --reinstall $PACKAGE | indent
+    apt-get $APT_OPTIONS -y --force-yes -d install --reinstall --no-install-recommends $PACKAGE | indent
   fi
 done
 
