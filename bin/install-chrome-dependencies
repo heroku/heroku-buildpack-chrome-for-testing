@@ -51,19 +51,36 @@ case "${STACK}" in
     error "STACK must be 'heroku-20', 'heroku-22' or 'heroku-24', not '${STACK}'."
 esac
 
-if [ ! -f $CACHE_DIR/PURGED_CACHE_V1 ]; then
-  echo "Purging cache" | indent
-  rm -rf $CACHE_DIR/apt
-  rm -rf $CACHE_DIR/archives
-  rm -rf $CACHE_DIR/lists
-  touch $CACHE_DIR/PURGED_CACHE_V1
+# We must invalidate the cache if the stack changes, since the cached indexes and
+# package archives will not be compatible with a different Ubuntu version.
+# This file really should be inside "${CACHE_DIR}/apt" not "${CACHE_DIR}/.apt", however,
+# the generic APT buildpack has used the wrong directory name for its version file for some
+# time, so we have to match that, given this buildpack and the APT buildpack share all the
+# other cached APT directories.
+STACK_VERSION_FILE="${CACHE_DIR}/.apt/STACK"
+
+if [[ -d "${CACHE_DIR}/apt" ]]; then
+  if [[ -f "${STACK_VERSION_FILE}" ]]; then
+    CACHED_STACK=$(cat "${STACK_VERSION_FILE}")
+  else
+    CACHED_STACK=
+  fi
+
+  if [[ "${CACHED_STACK}" == "${STACK}" ]]; then
+    echo "Reusing APT cache" | indent
+  elif [[ -z "${CACHED_STACK}" ]]; then
+    # Older versions of the buildpack won't have written the version file.
+    # (Plus any other broken APT-related buildpacks that don't invalidate on cache change.)
+    echo "Clearing APT cache since it's missing the stack version metadata file." | indent
+    rm -rf "${CACHE_DIR}/apt"
+  else
+    echo "Clearing APT cache since stack changed from ${CACHED_STACK} to ${STACK}" | indent
+    rm -rf "${CACHE_DIR}/apt"
+  fi
 fi
 
-# This is where the original buildpack installed Chrome itself,
-# but Chrome for Testing is installed from direct downloads.
-#
-# echo "Installing Google Chrome from the $channel channel." | indent
-# PACKAGES="$PACKAGES https://dl.google.com/linux/direct/google-chrome-${channel}_current_amd64.deb"
+mkdir -p "${CACHE_DIR}/.apt"
+echo "${STACK}" > "${STACK_VERSION_FILE}"
 
 APT_CACHE_DIR="$CACHE_DIR/apt/cache"
 APT_STATE_DIR="$CACHE_DIR/apt/state"
@@ -73,7 +90,7 @@ mkdir -p "$APT_STATE_DIR/lists/partial"
 
 APT_OPTIONS="-o debug::nolocking=true -o dir::cache=$APT_CACHE_DIR -o dir::state=$APT_STATE_DIR"
 
-echo "Updating apt caches" | indent
+echo "Updating APT package index" | indent
 apt-get $APT_OPTIONS update | indent
 
 for PACKAGE in $PACKAGES; do
