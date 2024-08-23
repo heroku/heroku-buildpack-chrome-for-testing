@@ -65,8 +65,9 @@ if [ -f "$ENV_DIR/GOOGLE_CHROME_MILESTONE_OFFSET" ]; then
   fi
 
   latest_version_per_milestone="$(curl --silent --show-error --fail --retry 3 --retry-connrefused --connect-timeout 10 "https://googlechromelabs.github.io/chrome-for-testing/latest-versions-per-milestone.json")"
-  VERSION="$(echo $latest_version_per_milestone | jq --arg milestone_offset="$milestone_offset" value '.milestones | map(.) | sort_by(.milestone)[($milestone_offset | tonumber)] | .version')"
+  VERSION="$(echo $latest_version_per_milestone | jq --raw-output --arg milestone_offset "$milestone_offset" '.milestones | map(.) | sort_by(.milestone)[($milestone_offset | tonumber)] | .version')"
   echo "Resolved milestone offset $milestone_offset to version $VERSION" | indent
+  INSTALLED_DESCRIPTION="milestone offset $milestone_offset"
 
 else
   # Detect requested channel or default to stable
@@ -80,6 +81,7 @@ else
   CHANNEL="$(echo -n "$channel" | awk '{ print toupper($0) }')"
   VERSION="$(curl --silent --show-error --fail --retry 3 --retry-connrefused --connect-timeout 10 "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_$CHANNEL")"
   echo "Resolved $CHANNEL version $VERSION" | indent
+  INSTALLED_DESCRIPTION="$CHANNEL"
 fi
 
 echo "Downloading Chrome" | indent
@@ -107,4 +109,4 @@ export PATH="$BUILD_DIR/.chrome-for-testing/chrome-linux64:$BUILD_DIR/.chrome-fo
 which chrome | indent
 which chromedriver | indent
 
-echo "Installed Chrome for Testing $CHANNEL version $VERSION" | indent
+echo "Installed Chrome for Testing $INSTALLED_DESCRIPTION version $VERSION" | indent
