@@ -46,17 +46,41 @@ if which chrome; then
   error "Chrome is already installed. This buildpack now installs a compatible version of Chrome. Please, remove the other Chrome installation. Chrome may have been installed by another buildpack (such as heroku/heroku-buildpack-google-chrome buildpack), which should no longer be used with this buildpack."
 fi
 
-# Detect requested channel or default to stable
-if [ -f "$ENV_DIR/GOOGLE_CHROME_CHANNEL" ]; then
-  channel=$(cat "$ENV_DIR/GOOGLE_CHROME_CHANNEL")
-  echo "Using env var GOOGLE_CHROME_CHANNEL=$channel" | indent
+# Detect milestone offset or channel-based version selection
+if [ -f "$ENV_DIR/GOOGLE_CHROME_MILESTONE_OFFSET" ]; then
+  milestone_offset=$(cat "$ENV_DIR/GOOGLE_CHROME_MILESTONE_OFFSET")
+  echo "Using env var GOOGLE_CHROME_MILESTONE_OFFSET=$milestone_offset" | indent
+
+  # jq is required to parse Chrome for Testing JSON API response
+  if which jq; then
+    echo "Using existing jq" | indent
+  else
+    echo "Installing jq" | indent
+    JQ_DIR="$INSTALL_DIR/jq"
+    mkdir -p "$JQ_DIR"
+    cd "$JQ_DIR"
+    wget --quiet -O jq https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-amd64
+    chmod +x jq
+    cd -
+  fi
+
+  latest_version_per_milestone="$(curl --silent --show-error --fail --retry 3 --retry-connrefused --connect-timeout 10 "https://googlechromelabs.github.io/chrome-for-testing/latest-versions-per-milestone.json")"
+  VERSION="$(echo $latest_version_per_milestone | jq --arg milestone_offset="$milestone_offset" value '.milestones | map(.) | sort_by(.milestone)[($milestone_offset | tonumber)] | .version')"
+  echo "Resolved milestone offset $milestone_offset to version $VERSION" | indent
+
 else
-  channel=stable
+  # Detect requested channel or default to stable
+  if [ -f "$ENV_DIR/GOOGLE_CHROME_CHANNEL" ]; then
+    channel=$(cat "$ENV_DIR/GOOGLE_CHROME_CHANNEL")
+    echo "Using env var GOOGLE_CHROME_CHANNEL=$channel" | indent
+  else
+    channel=stable
+  fi
+  # The current version endpoint requires ALL CAPS.
+  CHANNEL="$(echo -n "$channel" | awk '{ print toupper($0) }')"
+  VERSION="$(curl --silent --show-error --fail --retry 3 --retry-connrefused --connect-timeout 10 "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_$CHANNEL")"
+  echo "Resolved $CHANNEL version $VERSION" | indent
 fi
-# The current version endpoint requires ALL CAPS.
-CHANNEL="$(echo -n "$channel" | awk '{ print toupper($0) }')"
-VERSION="$(curl --silent --show-error --fail --retry 3 --retry-connrefused --connect-timeout 10 "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_$CHANNEL")"
-echo "Resolved $CHANNEL version $VERSION" | indent
 
 echo "Downloading Chrome" | indent
 ZIP_URL="https://storage.googleapis.com/chrome-for-testing-public/$VERSION/linux64/chrome-linux64.zip"
