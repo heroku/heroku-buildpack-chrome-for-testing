@@ -61,6 +61,7 @@ if [ -f "$ENV_DIR/GOOGLE_CHROME_MILESTONE_OFFSET" ]; then
     cd "$JQ_DIR"
     wget --quiet -O jq https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-$ARCH
     chmod +x jq
+    PATH="$JQ_DIR:$PATH"
     cd -
   fi
 
