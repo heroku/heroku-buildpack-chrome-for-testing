@@ -28,7 +28,7 @@ config variable to `Stable`, `Beta`, `Dev`, or `Canary`, and then deploy/build t
 ## Using an Older Chrome Release
 
 If the most recent stable Chrome or Chromedriver release has problems, perhaps due to an 
-app dependecy like Selenium not being compatible yet, an older major release can be installed.
+app dependency like Selenium not being compatible yet, an older major release can be installed.
 
 You can control how many major versions (milestones) back to install, with 
 `GOOGLE_CHROME_MILESTONE_OFFSET` config variable.
