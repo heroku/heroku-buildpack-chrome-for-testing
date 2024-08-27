@@ -51,20 +51,6 @@ if [ -f "$ENV_DIR/GOOGLE_CHROME_MILESTONE_OFFSET" ]; then
   milestone_offset=$(cat "$ENV_DIR/GOOGLE_CHROME_MILESTONE_OFFSET")
   echo "Using env var GOOGLE_CHROME_MILESTONE_OFFSET=$milestone_offset" | indent
 
-  # jq is required to parse Chrome for Testing JSON API response
-  if which jq; then
-    echo "Using existing jq" | indent
-  else
-    echo "Installing jq" | indent
-    JQ_DIR="$INSTALL_DIR/jq"
-    mkdir -p "$JQ_DIR"
-    cd "$JQ_DIR"
-    wget --quiet -O jq https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-$ARCH
-    chmod +x jq
-    PATH="$JQ_DIR:$PATH"
-    cd -
-  fi
-
   latest_version_per_milestone="$(curl --silent --show-error --fail --retry 3 --retry-connrefused --connect-timeout 10 "https://googlechromelabs.github.io/chrome-for-testing/latest-versions-per-milestone.json")"
   VERSION="$(echo $latest_version_per_milestone | jq --raw-output --arg milestone_offset "$milestone_offset" '.milestones | map(.) | sort_by(.milestone)[($milestone_offset | tonumber)] | .version')"
   echo "Resolved milestone offset $milestone_offset to version $VERSION" | indent
