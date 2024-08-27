@@ -25,6 +25,25 @@ by [Google](https://googlechromelabs.github.io/chrome-for-testing/).
 You can control the channel of the release by setting the `GOOGLE_CHROME_CHANNEL`
 config variable to `Stable`, `Beta`, `Dev`, or `Canary`, and then deploy/build the app.
 
+## Using an Older Chrome Release
+
+If the most recent stable Chrome or Chromedriver release has problems, perhaps due to an 
+app dependency like Selenium not being compatible yet, an older major release can be installed.
+
+You can control how many major versions (milestones) back to install, with 
+`GOOGLE_CHROME_MILESTONE_OFFSET` config variable.
+
+*This version offset strategy does not lock the app to a specific Chrome version. It will still update automatically, but lag behind by the specified offset.*
+
+Set `GOOGLE_CHROME_MILESTONE_OFFSET` to a negative index, such as:
+* `-4` for the previous major stable release
+* `-3` for the current major stable release
+* `-2` for the beta release
+* `-1` for the dev release.
+
+During build, this offset indexes the milestone-sorted data returned from the Chrome for Testing API [`latest-versions-per-milestone.json`](https://googlechromelabs.github.io/chrome-for-testing/latest-versions-per-milestone.json),
+in order to resolve a specific version to install.
+
 ## Migrating from Separate Buildpacks
 
 ### Remove Existing Installations
