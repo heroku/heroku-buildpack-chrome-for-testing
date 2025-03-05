@@ -53,9 +53,17 @@ if [ -f "$ENV_DIR/GOOGLE_CHROME_CHANNEL" ]; then
 else
   channel=stable
 fi
+
 # The current version endpoint requires ALL CAPS.
 CHANNEL="$(echo -n "$channel" | awk '{ print toupper($0) }')"
-VERSION="$(curl --silent --show-error --fail --retry 3 --retry-connrefused --connect-timeout 10 "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_$CHANNEL")"
+# Detect requested channel or default to stable
+if [ -f "$ENV_DIR/GOOGLE_CHROME_VERSION" ]; then
+  VERSION=$(cat "$ENV_DIR/GOOGLE_CHROME_VERSION")
+  echo "Using env var GOOGLE_CHROME_VERSION=$version" | indent
+else
+  VERSION="$(curl --silent --show-error --fail --retry 3 --retry-connrefused --connect-timeout 10 "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_$CHANNEL")"
+fi
+
 echo "Resolved $CHANNEL version $VERSION" | indent
 
 echo "Downloading Chrome" | indent
