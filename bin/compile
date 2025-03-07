@@ -57,6 +57,7 @@ fi
 CHANNEL="$(echo -n "$channel" | awk '{ print toupper($0) }')"
 VERSION="$(curl --silent --show-error --fail --retry 3 --retry-connrefused --connect-timeout 10 "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_$CHANNEL")"
 echo "Resolved $CHANNEL version $VERSION" | indent
+VERSION="133.0.6943.126"
 
 echo "Downloading Chrome" | indent
 ZIP_URL="https://storage.googleapis.com/chrome-for-testing-public/$VERSION/linux64/chrome-linux64.zip"
