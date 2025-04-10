@@ -17,6 +17,13 @@ heroku buildpacks:add -i 1 heroku-community/chrome-for-testing
 
 Deploy the app to install Chrome for Testing. 🚀 
 
+## Launching `chrome`
+
+To execute in a Heroku dyno, `chrome` typically requires the flags:
+
+* `--headless`
+* `--no-sandbox`
+
 ## Selecting the Chrome Release Channel
 
 By default, this buildpack will download the latest `Stable` release, which is provided
@@ -56,7 +63,7 @@ These locations may change in future versions of this buildpack, so please allow
 
 ### Changes to Command Flags
 
-The prior `heroku/google-chrome` buildpack wrapped the `chrome` command with default flags using a shim script. This is no longer implemented for `chrome` in this buildpack, to support evolving changes to the Chrome for Testing flags, such as the [--headless=new variation](https://developer.chrome.com/docs/chromium/new-headless).
+The prior `heroku/google-chrome` buildpack wrapped the `chrome` command with default flags using a shim script. This is no longer implemented for `chrome` in this buildpack, to support evolving changes to the Chrome for Testing flags.
 
 Depending on how an app is already setup for testing with Chrome, it may not require any changes.
 
