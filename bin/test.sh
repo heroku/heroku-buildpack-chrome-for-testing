@@ -19,7 +19,7 @@ docker run --rm heroku-buildpack-chrome-for-testing bash -l -c 'ldd $(which chro
 docker run --rm heroku-buildpack-chrome-for-testing bash -l -c 'ldd $(which chromedriver)'
 
 # Check Chrome can fully boot.
-docker run --rm heroku-buildpack-chrome-for-testing bash -l -c 'chrome --no-sandbox --screenshot https://google.com'
+docker run --rm heroku-buildpack-chrome-for-testing bash -l -c 'chrome --no-sandbox --headless --screenshot https://google.com'
 
 # Display a size breakdown of the directories added by the buildpack to the app.
 docker run --rm heroku-buildpack-chrome-for-testing bash -l -c 'du --human-readable --max-depth=1 /app'
