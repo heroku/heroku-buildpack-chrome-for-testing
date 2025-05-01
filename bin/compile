@@ -46,17 +46,23 @@ if which chrome; then
   error "Chrome is already installed. This buildpack now installs a compatible version of Chrome. Please, remove the other Chrome installation. Chrome may have been installed by another buildpack (such as heroku/heroku-buildpack-google-chrome buildpack), which should no longer be used with this buildpack."
 fi
 
-# Detect requested channel or default to stable
-if [ -f "$ENV_DIR/GOOGLE_CHROME_CHANNEL" ]; then
-  channel=$(cat "$ENV_DIR/GOOGLE_CHROME_CHANNEL")
-  echo "Using env var GOOGLE_CHROME_CHANNEL=$channel" | indent
+# Detect requested version or channel or default to stable
+if [ -f "$ENV_DIR/GOOGLE_CHROME_VERSION" ]; then
+  VERSION=$(cat "$ENV_DIR/GOOGLE_CHROME_VERSION")
+  echo "Using env var GOOGLE_CHROME_VERSION=$VERSION" | indent
 else
-  channel=stable
+  if [ -f "$ENV_DIR/GOOGLE_CHROME_CHANNEL" ]; then
+    channel=$(cat "$ENV_DIR/GOOGLE_CHROME_CHANNEL")
+    echo "Using env var GOOGLE_CHROME_CHANNEL=$channel" | indent
+  else
+    channel=stable
+  fi
+  # The current version endpoint requires ALL CAPS.
+  CHANNEL="$(echo -n "$channel" | awk '{ print toupper($0) }')"
+  VERSION="$(curl --silent --show-error --fail --retry 3 --retry-connrefused --connect-timeout 10 "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_$CHANNEL")"
+  echo "Resolved $CHANNEL version $VERSION" | indent
 fi
-# The current version endpoint requires ALL CAPS.
-CHANNEL="$(echo -n "$channel" | awk '{ print toupper($0) }')"
-VERSION="$(curl --silent --show-error --fail --retry 3 --retry-connrefused --connect-timeout 10 "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_$CHANNEL")"
-echo "Resolved $CHANNEL version $VERSION" | indent
+
 
 echo "Downloading Chrome" | indent
 ZIP_URL="https://storage.googleapis.com/chrome-for-testing-public/$VERSION/linux64/chrome-linux64.zip"
