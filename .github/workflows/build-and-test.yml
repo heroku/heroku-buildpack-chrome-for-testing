@@ -7,9 +7,9 @@ jobs:
     strategy:
       matrix:
         stack_version: [20, 22, 24]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-${{ matrix.stack_version }}.04
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Check Installation
       run: ./bin/test.sh ${{ matrix.stack_version }}
