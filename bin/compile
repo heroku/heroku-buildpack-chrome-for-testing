@@ -36,6 +36,10 @@ topic "Installing Chrome for Testing"
 INSTALL_DIR="$BUILD_DIR/.chrome-for-testing"
 mkdir -p "$INSTALL_DIR"
 
+# Set up cache directories for Chrome downloads
+CHROME_CACHE_DIR="$CACHE_DIR/chrome-for-testing"
+mkdir -p "$CHROME_CACHE_DIR"
+
 # Detect if the old config var is still used
 if [ -f "$ENV_DIR/CHROMEDRIVER_VERSION" ]; then
   error "This buildpack no longer supports CHROMEDRIVER_VERSION config var and must be removed to continue, because this buildpack now installs compatible versions of Chrome & Chromedriver. GOOGLE_CHROME_CHANNEL can be used to set Stable (default), Beta, Dev, or Canary."
@@ -58,19 +62,31 @@ CHANNEL="$(echo -n "$channel" | awk '{ print toupper($0) }')"
 VERSION="$(curl --silent --show-error --fail --retry 3 --retry-connrefused --connect-timeout 10 "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_$CHANNEL")"
 echo "Resolved $CHANNEL version $VERSION" | indent
 
-echo "Downloading Chrome" | indent
-ZIP_URL="https://storage.googleapis.com/chrome-for-testing-public/$VERSION/linux64/chrome-linux64.zip"
-ZIP_LOCATION="$INSTALL_DIR/chrome.zip"
-curl --silent --show-error --fail --retry 3 --retry-connrefused --connect-timeout 10 -o "${ZIP_LOCATION}" "${ZIP_URL}" | indent
-unzip -q -o "$ZIP_LOCATION" -d "$INSTALL_DIR" | indent
-rm -f "$ZIP_LOCATION"
+# Check if Chrome is already cached for this version
+CHROME_CACHE_FILE="$CHROME_CACHE_DIR/chrome-$VERSION.zip"
+if [ -f "$CHROME_CACHE_FILE" ]; then
+  echo "Using cached Chrome $VERSION" | indent
+else
+  echo "Downloading Chrome" | indent
+  ZIP_URL="https://storage.googleapis.com/chrome-for-testing-public/$VERSION/linux64/chrome-linux64.zip"
+  curl --silent --show-error --fail --retry 3 --retry-connrefused --connect-timeout 10 -o "${CHROME_CACHE_FILE}" "${ZIP_URL}" | indent
+fi
+unzip -q -o "$CHROME_CACHE_FILE" -d "$INSTALL_DIR" | indent
 
-echo "Downloading Chromedriver" | indent
-ZIP_URL="https://storage.googleapis.com/chrome-for-testing-public/$VERSION/linux64/chromedriver-linux64.zip"
-ZIP_LOCATION="$INSTALL_DIR/chromedriver.zip"
-curl --silent --show-error --fail --retry 3 --retry-connrefused --connect-timeout 10 -o "${ZIP_LOCATION}" "${ZIP_URL}" | indent
-unzip -q -o "$ZIP_LOCATION" -d "$INSTALL_DIR" | indent
-rm -f "$ZIP_LOCATION"
+# Check if Chromedriver is already cached for this version
+CHROMEDRIVER_CACHE_FILE="$CHROME_CACHE_DIR/chromedriver-$VERSION.zip"
+if [ -f "$CHROMEDRIVER_CACHE_FILE" ]; then
+  echo "Using cached Chromedriver $VERSION" | indent
+else
+  echo "Downloading Chromedriver" | indent
+  ZIP_URL="https://storage.googleapis.com/chrome-for-testing-public/$VERSION/linux64/chromedriver-linux64.zip"
+  curl --silent --show-error --fail --retry 3 --retry-connrefused --connect-timeout 10 -o "${CHROMEDRIVER_CACHE_FILE}" "${ZIP_URL}" | indent
+fi
+unzip -q -o "$CHROMEDRIVER_CACHE_FILE" -d "$INSTALL_DIR" | indent
+
+# Clean up old cached versions to prevent cache bloat (keep only 3 most recent)
+ls -t "$CHROME_CACHE_DIR"/chrome-*.zip 2>/dev/null | tail -n +4 | xargs rm -f 2>/dev/null || true
+ls -t "$CHROME_CACHE_DIR"/chromedriver-*.zip 2>/dev/null | tail -n +4 | xargs rm -f 2>/dev/null || true
 
 source "$BUILDPACK_DIR/bin/install-chrome-dependencies"
 

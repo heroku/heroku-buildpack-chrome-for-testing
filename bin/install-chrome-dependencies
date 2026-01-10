@@ -64,6 +64,9 @@ esac
 # time, so we have to match that, given this buildpack and the APT buildpack share all the
 # other cached APT directories.
 STACK_VERSION_FILE="${CACHE_DIR}/.apt/STACK"
+CACHE_TIMESTAMP_FILE="${CACHE_DIR}/.apt/TIMESTAMP"
+CACHE_MAX_AGE_DAYS=7
+CACHE_CLEARED=false
 
 if [[ -d "${CACHE_DIR}/apt" ]]; then
   if [[ -f "${STACK_VERSION_FILE}" ]]; then
@@ -72,21 +75,40 @@ if [[ -d "${CACHE_DIR}/apt" ]]; then
     CACHED_STACK=
   fi
 
-  if [[ "${CACHED_STACK}" == "${STACK}" ]]; then
-    echo "Reusing APT cache" | indent
-  elif [[ -z "${CACHED_STACK}" ]]; then
-    # Older versions of the buildpack won't have written the version file.
-    # (Plus any other broken APT-related buildpacks that don't invalidate on cache change.)
-    echo "Clearing APT cache since it's missing the stack version metadata file." | indent
-    rm -rf "${CACHE_DIR}/apt"
-  else
-    echo "Clearing APT cache since stack changed from ${CACHED_STACK} to ${STACK}" | indent
-    rm -rf "${CACHE_DIR}/apt"
+  # Check cache age
+  if [[ -f "${CACHE_TIMESTAMP_FILE}" ]]; then
+    CACHE_TIMESTAMP=$(cat "${CACHE_TIMESTAMP_FILE}")
+    CURRENT_TIMESTAMP=$(date +%s)
+    CACHE_AGE_DAYS=$(( (CURRENT_TIMESTAMP - CACHE_TIMESTAMP) / 86400 ))
+    
+    if [[ ${CACHE_AGE_DAYS} -gt ${CACHE_MAX_AGE_DAYS} ]]; then
+      echo "Clearing APT cache since it's ${CACHE_AGE_DAYS} days old (max: ${CACHE_MAX_AGE_DAYS} days)" | indent
+      rm -rf "${CACHE_DIR}/apt"
+      CACHE_CLEARED=true
+    fi
+  fi
+
+  # Check if cache still exists after potential age-based clearing
+  if [[ -d "${CACHE_DIR}/apt" ]]; then
+    if [[ "${CACHED_STACK}" == "${STACK}" ]]; then
+      echo "Reusing APT cache" | indent
+    elif [[ -z "${CACHED_STACK}" ]]; then
+      # Older versions of the buildpack won't have written the version file.
+      # (Plus any other broken APT-related buildpacks that don't invalidate on cache change.)
+      echo "Clearing APT cache since it's missing the stack version metadata file." | indent
+      rm -rf "${CACHE_DIR}/apt"
+      CACHE_CLEARED=true
+    else
+      echo "Clearing APT cache since stack changed from ${CACHED_STACK} to ${STACK}" | indent
+      rm -rf "${CACHE_DIR}/apt"
+      CACHE_CLEARED=true
+    fi
   fi
 fi
 
 mkdir -p "${CACHE_DIR}/.apt"
 echo "${STACK}" > "${STACK_VERSION_FILE}"
+date +%s > "${CACHE_TIMESTAMP_FILE}"
 
 APT_CACHE_DIR="$CACHE_DIR/apt/cache"
 APT_STATE_DIR="$CACHE_DIR/apt/state"
@@ -96,9 +118,14 @@ mkdir -p "$APT_STATE_DIR/lists/partial"
 
 APT_OPTIONS="-o debug::nolocking=true -o dir::cache=$APT_CACHE_DIR -o dir::state=$APT_STATE_DIR"
 
-echo "Updating APT package index" | indent
-apt-get $APT_OPTIONS update | indent
+if [[ "$CACHE_CLEARED" == "true" ]] || [[ "${CACHED_STACK}" != "${STACK}" ]]; then
+  echo "Updating APT package index" | indent
+  apt-get $APT_OPTIONS update | indent
+else
+  echo "Using cached APT package index" | indent
+fi
 
+PACKAGES_NEEDED=false
 for PACKAGE in $PACKAGES; do
   if [[ $PACKAGE == *deb ]]; then
     PACKAGE_NAME=$(basename $PACKAGE .deb)
@@ -107,17 +134,30 @@ for PACKAGE in $PACKAGES; do
     echo "Fetching $PACKAGE" | indent
     curl -s -L -z $PACKAGE_FILE -o $PACKAGE_FILE $PACKAGE 2>&1 | indent
   else
-    echo "Fetching .debs for $PACKAGE" | indent
-    apt-get $APT_OPTIONS -y --force-yes -d install --reinstall --no-install-recommends $PACKAGE | indent
+    # Check if package needs to be downloaded
+    OUTPUT=$(apt-get $APT_OPTIONS -y --force-yes -d install --no-install-recommends $PACKAGE 2>&1)
+    if echo "$OUTPUT" | grep -q "Need to get [1-9]"; then
+      PACKAGES_NEEDED=true
+      echo "Fetching .debs for $PACKAGE" | indent
+      echo "$OUTPUT" | indent
+    fi
   fi
 done
 
 mkdir -p $BUILD_DIR/.apt
 
-for DEB in $(ls -1 $APT_CACHE_DIR/archives/*.deb); do
-  echo "Installing $(basename $DEB)" | indent
-  dpkg -x $DEB $BUILD_DIR/.apt/
-done
+if [[ "$PACKAGES_NEEDED" == "true" ]]; then
+  echo "Installing packages" | indent
+  for DEB in $(ls -1 $APT_CACHE_DIR/archives/*.deb); do
+    echo "  $(basename $DEB)" | indent
+    dpkg -x $DEB $BUILD_DIR/.apt/
+  done
+else
+  echo "Extracting cached packages" | indent
+  for DEB in $(ls -1 $APT_CACHE_DIR/archives/*.deb); do
+    dpkg -x $DEB $BUILD_DIR/.apt/
+  done
+fi
 
 echo "Writing profile script" | indent
 mkdir -p $BUILD_DIR/.profile.d
