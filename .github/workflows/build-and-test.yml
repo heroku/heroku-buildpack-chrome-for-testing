@@ -6,7 +6,7 @@ jobs:
   test:
     strategy:
       matrix:
-        stack_version: [20, 22, 24]
+        stack_version: [22, 24, 26]
     runs-on: ubuntu-latest
 
     steps:
