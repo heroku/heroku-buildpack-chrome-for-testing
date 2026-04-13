@@ -17,7 +17,7 @@ topic "Installing Chrome dependencies"
 # The package list is validated by bin/test.sh - see its output to identify any missing libraries.
 # Also look here for more packages/notes https://developers.google.com/web/tools/puppeteer/troubleshooting
 case "${STACK}" in
-  "heroku-20" | "heroku-22")
+  "heroku-22")
     PACKAGES="
       fonts-liberation
       libasound2
@@ -32,7 +32,7 @@ case "${STACK}" in
       libxrandr2
     "
     ;;
-  "heroku-24")
+  "heroku-24" | "heroku-26")
     PACKAGES="
       fonts-liberation
       libasound2t64
@@ -48,7 +48,7 @@ case "${STACK}" in
     "
     ;;
   *)
-    error "STACK must be 'heroku-20', 'heroku-22' or 'heroku-24', not '${STACK}'."
+    error "STACK must be 'heroku-22', 'heroku-24' or 'heroku-26', not '${STACK}'."
 esac
 
 # We must invalidate the cache if the stack changes, since the cached indexes and
